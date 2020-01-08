@@ -1,0 +1,1679 @@
+---
+title: "<font size='4'>Natural Language Processing for Beginners (Python)</font>" 
+
+author: "Dr Paraskevi Pericleous"
+
+output: 
+  html_document:
+    theme: united
+    toc: yes
+    toc_float: yes
+---
+
+<style>
+
+img[alt='logo']{
+    width: 31%;
+    height: auto;
+}
+
+.freqdist .figure{
+  text-align: center;
+}
+
+.freqdist .figure img{
+  width: 80%;
+}
+
+</style>
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, echo=FALSE}
+htmltools::img(src = knitr::image_uri("DataScienceCampus.png"), 
+               alt = 'logo', 
+               style = 'position:absolute; top:0; right:0; padding:10px;')
+```
+
+<br> 
+
+**Audience:** Diverse Background
+
+<br>
+
+**Time:** 1 day workshop (6 hours)
+
+<br>
+
+**Pre-Requisites:** Prior experience with the python programming language is essential: this is not an Introduction to Python. Basic competency is assumed. If you have not use python before consider taking: Intro to Python (Data Science Campus) or data camp courses prior to attending. 
+
+<br>
+
+**Brief Description:** Natural Language Processing is a sub-field of Artificial Intelligence. It is used for processing and analysing large amounts of natural language (linguistics). Some applications include search engines (Google), text classification (spam filters), identifying sentiments for a product (sentiment analysis), methods for discovering abstract topics in a collection of documents (topic modelling) and machine translation technologies. This is an Introduction to Natural Language Processing, and thus the main concepts are about cleaning, exploring datasets, and applying feature engineering techniques to transform text data into numerical data. 
+
+<br>
+<br>
+
+**Aims, Objectives and Intended Learning Outcomes:** This module will provide a introduction to the Natural Language Processing field using Python programming language. It covers some basic terminology, the process of 'cleaning' a dataset, exploring it and applying simple feature engineering techniques to transform the data. By the end of the module learners will understand and apply the necessary steps to 'clean', explore and transform their dataset in the appropriate order.
+
+<br>
+
+By the end of Chapter 1 you will understand what 
+
+* Natural Language is, 
+
+* its real-life applications, 
+
+* their challenges, 
+
+* the basic terminology in Natural Language Processing and 
+
+* understand what the work procedure is from having a dataset to obtaining the results. (You will not be expected to perform all of these steps.) 
+
+<br>
+
+By the end of Chapter 2, learners will be able to 
+
+* understand the concept of text-preprocessing, 
+
+* why it is used and 
+
+* how to do it. 
+
+* be able to understand and perform the following steps to a dataset: 
+
+  + lowercase, 
+  
+  + tokenize,
+  
+  + lemmatization, 
+  
+  + removing stop words and punctuation and 
+  
+  + performing Part-of-Speech Tagging. 
+  
+*You will need to understand the difference between lemmatization and stemming. 
+
+<br>
+
+By the end of Chapter 3, it is expected that you will be 
+
+* familiar with the exploratory analysis techniques, 
+
+* understand the rationale for using each technique, 
+
+* when it is used and how you can interpret the outcome from each technique to understand the dataset. 
+
+* be able to search and visualize specific words and their frequency in the dataset, 
+
+* calculate lexical diversity. 
+
+* You will also be able to find the most frequent words and plot a frequency distribution plot. 
+
+<br>
+
+By the end of Chapter 4, you should be able to 
+
+* explain the reasons for performing feature engineering techniques  
+
+* apply different feature engineering techniques to transform text data into numeric data. 
+
+* You will know what Entity Recognition and N-grams are and how to apply these techniques. 
+
+* You will be able to transform text data into numeric using Bag-of-Words (Doc2bow) and One-Hot Encoding methods. 
+
+* You should know how to visualize text data using wordclouds using two different frequency measures (simple and Term Frequency- Inverse Document Frequency) 
+
+<br>
+
+By the end of Chapter 5, you would feel confident
+
+* to describe datasets, discuss what the appropriate steps are to do text-preprocessing and exploratory analysis (wordlcouds only), 
+
+* You should be able to perform these steps in the appropriate order and communicate the results.
+
+<br>
+<br>
+
+**Dataset:** `Patent Dataset`, `Hep Dataset` (High_Energy_Physics)
+
+<br>
+
+**Libraries:** Before attending the course please make sure that you read the course instructions that you received. 
+
+<br>
+
+**Acknowledgements:** Many thanks to Savvas Stephanides for joining me on a pair programming approach to create the function that performs the text preprocessing and for his code review. Many thanks to Joshi Chaitanya that has provided Hep Dataset and some of his code for this course, to Ian Grimstead and Thanasis Anthopoulos for providing the Patent Dataset, to Gareth Clews, Isabela Breton and Dan Lewis for reviewing the material and the code and Dave Pugh for lending the Regex material. Also thanks to everyone who attended the pilot course to provide feedback about the course.
+
+<br>
+
+```{r, echo=FALSE}
+library(reticulate)
+#use_python("/Library/Frameworks/Python.framework/Versions/3.7/bin/python3")
+use_python("/Library/Frameworks/Python.framework/Versions/3.7/bin/python3.7")
+#py_available() #if this is False, then use code chunk below. 
+#For problems with matplotlib and its backened: find your route, in the matplotlib create a matplotlibrc, use nano and type in the #matplotlibrc: backend: TkAgg and save it
+#(base) C02XR5T0JGH6:~ skevipericleous$ cd ~
+#(base) C02XR5T0JGH6:~ skevipericleous$ cd .matplotlib
+#(base) C02XR5T0JGH6:.matplotlib skevipericleous$ nano matplotlibrc
+#To confirm that it is there type:
+#(base) C02XR5T0JGH6:.matplotlib skevipericleous$ ls
+```
+
+
+<br>
+
+```{python, echo=FALSE, results=FALSE}
+import nltk
+
+nltk.download('punkt')
+```
+
+nltk.download('wordnet')
+nltk.download('averaged_perceptron_tagger')
+nltk.download('gutenberg')
+nltk.download('genesis')
+nltk.download('inaugural')
+nltk.download('nps_chat')
+nltk.download('webtext')
+nltk.download('treebank')
+nltk.download('stopwords')
+nltk.download('brown')
+nltk.download('maxent_ne_chunker')
+nltk.download('words')
+
+from nltk import ngrams
+from nltk.stem import PorterStemmer
+from nltk.stem import WordNetLemmatizer
+from nltk.corpus import stopwords
+from nltk.corpus import brown
+from nltk.book import *
+
+import gensim
+from gensim import models, corpora
+from gensim.models import TfidfModel
+
+import sklearn
+from sklearn import feature_extraction
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+
+import wordcloud
+from wordcloud import WordCloud
+
+import string
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import pickle
+import re
+
+from collections import Counter
+```
+
+<br>
+
+##Chapter 1: Introduction to Natural Language Processing (NLP)   
+
+\newline \newline \newline \newline
+
+<br>
+
+**Intended Learning Outcomes:** By the end of Chapter 1 you will understand 
+
+* what Natural Language Processing is, 
+
+* its real-life applications, 
+
+* their challenges, 
+
+* the basic terminology in Natural Language Processing and 
+
+* what the work procedure is for this course
+
+
+<br>
+
+###1.1 What is NLP
+
+<br>
+
+Take a look at Google Dictionary.
+
+\newline \newline \newline \newline
+
+<br>
+
+![](what is a language.png)
+
+\newline \newline \newline \newline
+
+<br>
+<br>
+<br>
+
+
+![](what is a natural language.png)
+
+\newline \newline \newline \newline
+
+<br>
+<br>
+<br>
+
+
+![](what is NLP.png)
+
+\newline \newline \newline \newline
+
+<br>
+<br>
+<br>
+
+###1.2 Real-Life Applications and Challenges
+
+<br>
+
+![](NLP Appl.png)
+
+\newline \newline \newline \newline
+
+<br>
+<br>
+<br>
+
+1. Machine Translation Technologies 
+
+    Challenge: preserve the meaning of the sentence from one language to the other 
+
+2. Search Engines eg. Google
+
+    Challenge: recognize natural language questions, extract the meaning of the question and give an answer 
+
+3. Text Classification eg. Spam Filters
+
+    Challenge: Overcome False Negatives and False Positives ie. sending to spam folder non-spam emails and vice-versa
+    
+4. Sentiment Analysis eg. identify sentiments for a product 
+
+    Challenge: understanding sarcasm and ironic comments
+
+5. Topic Modelling: method for discovering the abstract topics in a document collection
+
+    Challenge: using a robust algorithm, sacrifice speed over accuracy? 
+
+6. Transcription of speech (turning spoken language into written languages)
+
+    Challenge: dealing with looser grammar  
+
+<br>
+
+###1.3 Basic Terminology
+
+<br>
+
+1. Text Corpus or Corpora: large set of text data in any language. It can be one single document or plenty. The source of the Corpus can be books, social network sites etc. 
+
+2. Sentence: text unit. It has a complete meaning and context. It can include an opinion or a sentiment. They consist of part of speech (POS) entities eg nouns, verbs etc.
+
+3. Paragraph: is a collection of text units/sentences
+
+4. Phrases: group of consecutive words within a sentence. 
+
+<br>
+
+###1.4 How we work
+
+<br>
+
+**Steps**
+
+1. Have a dataset 
+
+2. Text Pre-Processing (Data Cleaning)
+
+3. Exploratory Analysis and Data Transformation
+
+4. Split the Dataset (Data Scientists may prefer to do the exploratory analysis after they split the Dataset)
+
+5. Identify the technique that is most suitable for your Dataset and what you may think can take out of it. Use this on the Train Dataset eg Topic Modelling
+
+6. Explore different features of the model on the Validate Dataset (Tuning)
+
+7. Test the accuracy and the robustness of your model
+
+8. Communicate your results
+
+9. Make a prediction, if it is possible  
+
+**Note** This is an Introduction to Natural Language Processing, and thus anything after 3. is beyond this course. 
+
+<br>
+
+###1.5 spaCy and nltk packages
+
+<br>  
+
+nltk and spaCy are the two Python packages that some data scientists have strong feelings in favour of one or the other. In this course we will only deal nltk. It is considered that nltk can be used for teaching and understanding but it is slow. spaCy, on the other hand, is considered fast and more robust. 
+
+The first edition of the book, published by O'Reilly, is available at http://nltk.org/book_1ed/ .
+
+The official website is https://spacy.io and the source code on github is available at https://github.com/explosion/spaCy . 
+
+<br>
+
+**Intended Learning Outcomes:** You should now
+
+* understand what Natural Language Processing is, 
+
+* its real-life applications, 
+
+* their challenges, 
+
+* the basic terminology in Natural Language Processing and 
+
+* understand what the work procedure is from having a dataset to obtaining the results for this course.  
+
+<br>
+
+##Chapter 2: Text Pre-Processing
+
+<br>
+
+**Intended Learning Outcomes:** By the end of Chapter 2, learners will be able to:
+
+* understand the concept of text-preprocessing, 
+
+* why it is used and how to do it. 
+
+* You will be able to understand and perform the following steps to a dataset: 
+
+    + lowercase, 
+
+    + tokenize, 
+
+    + lemmatization, 
+
+    + removing stop words and punctuation and 
+
+    + performing Part-of-Speech Tagging. 
+
+* You will understand the difference between lemmatization and stemming which is used by the nltk Python package. 
+
+<br>
+
+###2.1 What is Text Pre-Processing
+
+<br>
+
+The data comes in raw form. It may include unnecessary information and/or may not have the form that we need to start processing it
+
+<br>
+
+###2.2 Why we need it
+
+<br>
+
+Text Pre-Processing removes redundant or unnecessary information and changes the data into a form that the machine can process it and provide meaningful results
+
+<br>
+
+###2.3 When do we do it
+
+<br>
+
+Text Pre-Processing is performed before the dataset is split and before the modelling techniques are applied
+
+<br>
+
+###2.4 Why it is important
+
+<br>
+
+Pre-Processing 'cleans' the data so that the machine (methods) will be able to read and process it. Otherwise, it would not be possible to do that and provide meaningful outcome
+
+<br>
+
+###2.5 Create the String
+
+<br>
+
+We have the sentence: "Natural Language Processing for Beginners in Python is the best course ever!"
+
+To do this we first need to import the code into Python:
+
+```{python}
+my_sentence = 'Natural Language Processing for Beginners in Python is the best course ever! 1'
+print(my_sentence)
+```
+
+<br>
+
+**Exercise:** Create a string my_opinion = 'Natural Language Processing is 1 of the most popular topics in Artificial Intelligence.'
+
+<br>
+
+###2.6 Convert to lowercase
+
+<br>
+
+Quite often the same word in a text can be written with capital or lowercase letters, eg "Natural" or "natural". In NLP, they could be recognised as two different words. Thus, converting everything to lowercase will ensure that this does not happen. 
+
+```{python}
+lowercase_sentence = my_sentence.lower()
+print(lowercase_sentence)
+```
+
+<br>
+
+**Exercise:** Convert `my_opinion` to lowercase. 
+
+<br>
+
+###2.7 Tokenize
+
+<br>
+
+Tokenization is the process of splitting a string of word(s) into pieces (or tokens), eg The tokens of the phrase 'My house' are: 'My' and 'house'.
+
+Tokenizing makes it easier to process every word eg find its frequency. 
+
+```{python}
+tokens_from_sentence = nltk.word_tokenize(lowercase_sentence)
+print(tokens_from_sentence)
+``` 
+
+<br>
+
+**Exercise:** Tokenize `my_opinion`.
+
+<br>
+
+**Note: Line Segmentation**  
+
+```{python}
+example_sentences = """Natural Language Processing for Beginners in Python is the best course ever!!! You learn so many cool stuff and artificial intelligence has progressed so much!!! I do not know what to say!!! I am really impressed!!!"""
+
+sentence_segments = nltk.sent_tokenize(example_sentences)# breaks the sentence after every !!!, or is it? 
+print(sentence_segments)
+```
+
+<br>
+
+###2.8 Part-Of-Speech (POS) Tagging 
+
+<br>
+
+POS Tagger reads text and assigns part of speech text to the words eg adjective, verb, noun.
+
+```{python}
+tokens_with_part_of_speech_tag = nltk.pos_tag(tokens_from_sentence)
+print(tokens_with_part_of_speech_tag)
+```
+
+POS Tagger reads text and assigns part of speech text to the words eg adjective, adverb.  
+
+JJ: adjective
+
+NN: noun 
+
+NNP:proper noun (a name)
+
+IN: preposition
+
+VBZ: verb, 3rd person sing. present (walks)
+
+DT: determiner
+
+JJS: adjective superlative (tallest) 
+
+RB: adverb (quietly)
+
+CD: cardinal digit
+
+**How to keep noun, adjective, verb and adverb**
+
+```{python}
+new_sentence = [each_token[0] for each_token in tokens_with_part_of_speech_tag if each_token[1] in ["JJ", "NN", "VB","RB"]]
+
+# JJ (adjective), NN (noun), NNP (proper noun), RB (adverb), VB (verb) 
+
+print(new_sentence)
+```
+
+However, `nltk` does not "think" the same way as humans. So,
+
+```{python}
+important_words = [each_token[0] for each_token in tokens_with_part_of_speech_tag if each_token[1] in ["JJ", "JJR", "JJS", "NN", "NNS", "NNP", "NNPS", "RB", "RBR", "RBS", "VB", "VBD", "VBG", "VBN", "VBP", "VBZ"]]
+
+#JJ	adjective	'big', JJR	adjective, comparative	'bigger', JJS	adjective, superlative	'biggest'
+#NN	noun, singular 'desk', NNS	noun plural	'desks', NNP	proper noun, singular	'Harrison', NNPS	proper noun, plural	'Americans'
+
+#RB	adverb	very, silently, RBR	adverb, comparative	better, RBS	adverb, superlative	best
+
+#VB	verb, base form	take, VBD	verb, past tense	took, VBG	verb, gerund/present participle	taking, VBN	verb, past participle	taken, VBP	verb, sing. present, non-3d	take, VBZ	verb, 3rd person sing. present	takes
+
+print(important_words)
+```
+
+<br>
+
+**Note:**
+
+Notice the difference from having simple adjective, verb, noun and adverb words? You don't have to use all these categories in this course, but be aware. In the Appendix there is a list with all the POS-Tagging nltk categories.
+
+<br>
+
+**Exercises** 
+
+1. Do POS tagging to the tokens of `my_opinion`.
+
+2. Create a new sentence from `my_opinion` by keeping the nouns and verbs only.
+
+<br>
+
+
+###2.9 Do Stemming
+
+<br>
+
+**Simple Explanation:** Stemming is the process of reducing the word back to its stem (removing prefix and suffix). Even if the stem itself is not necessarily a valid root.
+
+**Formal Explanation** Stemming - the process of reducing inflected (or sometimes derived) words to their word stem; that is, their base or root form. For example, the words; argue, argued, argues, arguing reduce to the stem argu. Usually stemming is a crude heuristic process that chops off the ends of words in the hope of achieving the root correctly most of the time.
+
+Stemming aims to remove the excess part of the word to be able to identify words that are similar. 
+
+```{python}
+stemmer = PorterStemmer() #Define the Stemmer- it is a stemming algorithm (since 1979)
+
+stemmed_sentence = map(stemmer.stem, tokens_from_sentence) #apply the stemming algorithm to the Tokens_from_Sentence
+#map() applies the function func to all the elements of the sequence seq. The first argument func is the name of a function and the second a sequence (e.g. a list) seq. 
+print(list(stemmed_sentence))
+```
+
+<br>
+
+**Question:** What do you think of the Stemming?
+
+<br>
+
+**Exercise:** Do Stemming to the tokens of `my_opinion`.
+
+<br>
+
+**Note:**
+The stem of the word "beginners" is "beginn", but the stem of the word "begins" is "begin".
+
+<br>
+
+###2.10 Do Lemmatization
+
+<br>
+
+**Simple Explanation:** The process of converting a word to its dictionary form eg women will become woman, walking will become walk.
+
+**Formal Explanation:** Lemmatisation uses vocabulary and morphological analysis of words to remove inflectional endings only and to return the base or dictionary form of a word, which is known as the lemma. Most lemmatisers achieve this using a lookup table and so this process, when you have large volumes of text may be slower than stemming. However, if it is a suitable application for your data then lemmatising is generally the recommended approach to take. 
+
+If confronted with the token 'saw', stemming might return just 's', whereas lemmatisation would attempt to return either 'see' or 'saw' depending on whether the use of the token was as a verb or a noun. However, most stemming algorithms impose a 'shortest length' on the tokens they are trying to stem so we should get saw in this instance unless we write out own and its very crude.
+
+Now we could start to build our own functions here, using rules such as:
+
+if the word ends in 'ed', remove the 'ed'
+
+if the word ends in 'ing', remove the 'ing'
+
+if the word ends in 'ly', remove the 'ly'.
+
+This might work for stemming but lemmatising is a far more complex challenge as you have to generate a whole database of the english language which understands word morphology.
+
+But there is good news - someone has already done all the hard work for us! 
+
+Lemmatizing aims to remove the excess part of the word to be able to identify words that are similar. 
+
+**Lemmatization and Stemming:** Stemming operates on each word without considering the context and it cannot discriminate between different word meaning. Lemmatization, however, takes into account the part of speech and the context. 
+
+**Example:**
+
+"better": has "good" as its lemma and "better" as its stem
+"walking": has  "walk" as its lemma and stem
+"meeting": can be either the base a noun or a verb depending on the context, eg. "in our last meeting" or "We are meeting again tomorrow". Lemmatization can select the appropriate lemma based on the context, unlike stemming.
+
+```{python}
+wordnet_lemmatizer = WordNetLemmatizer()#lexical database
+#parts_of_speech = [wordnet.ADJ, wordnet.ADV, wordnet.NOUN, wordnet.VERB]
+
+noun_lemma = wordnet_lemmatizer.lemmatize(tokens_from_sentence[4], pos=wordnet.NOUN)
+print(noun_lemma)
+```
+
+
+<br>
+
+**Questions:** 
+
+1. What does this differ from Stemming? 
+
+2. Can you think of any more words that will change with lemmatization?
+
+<br>
+
+**Exercise:** Do Lemmatization to the tokens of `my_opinion`.
+
+<br>
+
+**Note:** Lemmatisation uses a lookup table to return things to their roots, stemming purely cuts off text from the string which is far less robust than Lemmatisation. However, Stemming is nice if you have lots of typos and words that are out of dictionary. Data Scientists have different approaches when it comes to Stemming and Lemmatizing. They would either never do both, or have a preference in Lemmatisation only, or Lemmatize twice and then do Stemming once. 
+
+<br>
+
+###2.11 Remove Stop Words and Punctuation
+
+<br>
+
+```{python}
+stop_words = set(stopwords.words("english"))
+print(stop_words)
+
+print(tokens_from_sentence)
+
+tokens_without_stopwords = [each_token for each_token in tokens_from_sentence if each_token not in stop_words]
+print(tokens_without_stopwords)
+```
+
+```{python}
+#string.punctuation is a list
+#str.maketrans creates a translation table
+#all the punctuations in string.punctuation in the translation table are called as NONE. it means when it used and it identifies the number of the punctuation, it will remove it. This is what happens in the loop below. 
+punctuation_table = str.maketrans({key: None for key in string.punctuation}) 
+tokens_without_punctuation = [token.translate(punctuation_table) for token in tokens_from_sentence]
+print(tokens_without_punctuation)
+```
+
+<br>
+
+**Note:** In the above example we have removed punctuation from tokens. A very easy way to remove punctuation from a list is the following: 
+
+```{python}
+for each_punctuation_mark in string.punctuation:
+  my_sentence = my_sentence.replace(each_punctuation_mark,"")
+print(my_sentence)
+```
+
+<br>
+
+**Exercise:** Remove StopWords from the tokens of `my_opinion`.
+
+<br>
+
+###2.11 Remove other superfluous words that need to be removed manually
+
+<br>
+
+```{python}
+print(tokens_from_sentence) #Recall the Tokens in the Sentence
+
+alphabetic_tokens = [token for token in tokens_from_sentence if token.isalpha()]#Remove anything that is not alphabetic
+print(alphabetic_tokens)
+
+large_tokens = [token for token in tokens_from_sentence if len(token) > 2]#Remove short words (2 character words)
+print(large_tokens)
+```
+
+
+<br>
+
+**Exercises:** 
+
+1. Remove any other words from the tokens of `my_opinion`.
+
+2. Have you found a convenient step order? (You can take look at the next section if you want. It is not cheating!!!)
+
+<br>
+
+**Note:** 
+
+1. In large texts it will be faster and more efficient to add any other words that are not required to the Stopwords list, using
+
+```{python}
+more_stopwords = {'Beginners','Ever'}
+
+extended_stopwords_set = set(stopwords.words('english')) | more_stopwords
+print(extended_stopwords_set)
+```
+
+2. In some applications you may need to keep some words that are part of the stop words. eg. when you are looking for reviews and someone has written: "I won't buy this again" or "I wouldn't waste my money on this product". "won't" and "wouldn't" need to remain in the dataset because they show a negative opinion and if we remove those the opinion changes.
+
+```{python}
+stopwords_to_stay_in_dataset = {"won't", "wouldn't"}
+
+updated_stopwords_set = set(stopwords.words('english')) - stopwords_to_stay_in_dataset
+print(updated_stopwords_set)
+```
+
+<br>
+
+
+###2.13 Suggested Step Order for Text-Preprocessing
+
+<br>
+
+1. Split Tokens
+2. Remove punctuation from each string
+3. Remove Tokens that are not alphabetic
+4. Convert letters to lowercase
+5. Remove StopWords
+6. Remove ShortWords or other superfluous words
+7. Do Lemmatization
+
+<br>
+
+###2.13.1 Function for Text-Preprocessing
+
+<br>
+
+```{python}
+def clean_up_text(text):
+    tokens = split_text_to_tokens(text)
+    tokens = clean_up_tokens(tokens)
+    processed_text = " ".join(tokens)
+    return processed_text
+```
+
+```{python}
+def split_text_to_tokens(text):
+    return nltk.word_tokenize(text)
+```
+
+```{python}
+def clean_up_tokens(tokens):
+    tokens = remove_punctuation_from_tokens(tokens)
+    tokens = remove_non_alphabetic_tokens(tokens)
+    tokens = set_tokens_to_lowercase(tokens)
+    tokens = remove_stopwords_from_tokens(tokens)
+    tokens = remove_small_words_from_tokens(tokens)
+    tokens = lemmatize_tokens(tokens)
+    tokens = remove_unimportant_words_from_tokens(tokens)
+    return tokens
+```
+
+```{python}
+def remove_punctuation_from_tokens(tokens):
+    translation_table = str.maketrans({key: None for key in string.punctuation})
+
+    text_without_punctuations = []
+    for each_token in tokens:
+        text_without_punctuations.append(each_token.translate(translation_table))
+    return text_without_punctuations
+```
+
+```{python}
+def remove_non_alphabetic_tokens(tokens):
+    alphabetic_tokens = []
+    for token in tokens:
+        if token.isalpha():
+            alphabetic_tokens.append(token)
+    return alphabetic_tokens
+```
+
+```{python}
+def set_tokens_to_lowercase(tokens):
+    lowercase_tokens = []
+    return [each_token.lower() for each_token in tokens]
+```
+
+```{python}
+def remove_stopwords_from_tokens(tokens):
+    stop_words = set(stopwords.words("english"))
+    return [each_token for each_token in tokens if each_token not in stop_words]
+```
+
+```{python}
+def remove_small_words_from_tokens(tokens):
+    return [each_token for each_token in tokens if len(each_token) > 2]
+```
+
+```{python}
+def remove_unimportant_words_from_tokens(tokens):
+    lemmatized_tokens = lemmatize_tokens(tokens)
+
+    tokens_with_part_of_speech_tags = nltk.pos_tag(lemmatized_tokens)
+    
+    cleared_token_list = [each_token[0] for each_token in tokens_with_part_of_speech_tags if each_token[1] in ["JJ", "JJR", "JJS", "NN", "NNS", "NNP", "NNPS", "RB", "RBR", "RBS", "VB", "VBD", "VBG", "VBN", "VBP", "VBZ"]]
+
+    # JJ (adjective), NN (noun), NNP (proper noun), RB (adverb), VB (verb) 
+
+    return cleared_token_list
+```
+
+```{python}
+def lemmatize_tokens(tokens):
+    wordnet_lemmatizer = WordNetLemmatizer()
+
+    parts_of_speech = [wordnet.ADJ, wordnet.ADJ_SAT, wordnet.ADV, wordnet.NOUN, wordnet.VERB]
+    lemmatized_tokens = tokens
+
+    for each_part_of_speech in parts_of_speech:
+        lemmatized_tokens = [wordnet_lemmatizer.lemmatize(each_token, pos=each_part_of_speech) for each_token in lemmatized_tokens]
+
+    return lemmatized_tokens
+```
+
+```{python}
+my_opinion = 'Natural Language Processing is 1 of the most popular topics in Artificial Intelligence.'
+clean_opinion = clean_up_text(my_opinion)
+print(clean_opinion)
+```
+
+<br>
+
+**Exercises:**
+
+1. Use the `clean_up_text()` to do text-preprocessing to the sentences 'The song of Ariana Grande has been number one hit on the charts for the last three months. When will Ed Sheeran become number one again?'
+
+2. Import the Hep Dataset and do the text-preprocessing as we learnt.
+
+Hint: The Hep Dataset is a pickle file. Make sure that your workspace is in the same directory as your dataset. To import a pickle file use the following code:
+
+```{python}
+import pickle
+import pandas as pd
+
+high_energy_physics_dataset = pd.read_pickle("./Hep_Dataset.pkl")
+print(high_energy_physics_dataset.head(1))
+```
+
+<br>
+
+###2.14 Challenges
+
+<br>
+
+####2.14.1 Punctuation
+Words like Ph.D that have a ., but the sentence does not finish would require an exception function. Additionally words like don't, won't also need to be handled with caution.
+
+####2.14.2 Consistency
+Using different methods for lemmatization may give different results- staying consistent throughout your work will ease your processing and will not mess with your results
+
+####2.14.3 Stemming
+Usually stemming is not preferred. If you do want to use stemming to help you find more words that are closely related, then it would be better if you keep the stemmised and the non-stemmised version of the word. This will help you present the results as the end.
+
+\newline \newline \newline \newline
+
+<br>
+
+**Intended Learning Outcomes:** Learners now are able to understand
+
+* the concept of text-preprocessing, 
+
+* why it is used and 
+
+* how to do it. 
+
+* You should now what steps consist of the text-preprocessing and
+
+* be able to perform these steps to a dataset using the `nltk` Python package: 
+
+    + lowercase, 
+    
+    + tokenize, 
+    
+    + lemmatization, 
+    
+    + removing stop words and punctuation and 
+    
+    + performing Part-of-Speech Tagging. 
+    
+* You can now understand the difference between lemmatization and stemming. 
+
+\newline \newline \newline \newline
+
+<br>
+
+##Chapter 3: Exploratory Analysis
+
+\newline \newline \newline \newline
+
+<br>
+
+**Intended Learning Outcomes:** By the end of Chapter 3, it is expected that you will
+
+* be familiar with the exploratory analysis techniques, 
+
+* understand the rationale for using each technique, 
+
+* when it is used and 
+
+* how you can interpret the outcome from each technique to understand the dataset. 
+
+* be able to search and visualize specific words and their frequency in the dataset, 
+
+* calculate lexical diversity. 
+
+* You will also be able to find the most frequent words, plot a frequency distribution plot.
+
+\newline \newline \newline \newline
+
+<br>
+
+###3.1 What is this analysis
+
+<br>
+
+Exploratory Analysis is the process of trying to understand the raw data that we have. 
+
+<br>
+
+###3.2 Why do we do it
+
+<br>
+
+Understanding the data and perhaps any patterns that it contains is crucial into choosing the right method/technique to obtain a meaningful outcome. 
+
+<br>
+
+###3.3 Import Data (Patent Dataset)
+
+<br>
+
+We import the US Patent Data for 100 patents. The data includes a particular patent technology area (CPC classification). We are interested in the terminology that is used in all these different areas.
+
+```{python}
+import pandas as pd
+
+#Use the path in your laptop and make sure you include multiple " " if the path takes more than one line
+patent_data = pd.read_pickle("./Patent_Dataset.pkl")
+print(patent_data.head(1))
+```
+
+<br>
+
+###3.4 Searching for Text
+
+<br>
+
+Suppose we are interested if the abstract includes the words 'surface'.
+
+```{python}
+patent_data_abstract = patent_data["abstract"] #taking the abstract only
+abstract_string = " ".join(patent_data_abstract.tolist()) #joining everything into one string
+#if you want to turn to lowercase letters: (" ".join(Abstract_from_Patent_Data.tolist()).lower())
+```
+
+```{python}
+abstract_tokens = nltk.word_tokenize(abstract_string) #tokenize
+abstract_text_object = nltk.Text(abstract_tokens) #turning it into nltk.Text object to be able to use .condordance, .similar etc
+abstract_text_object.concordance('surface')
+#.concordance() for exact words- it is not case sensitive, .count() is case sensitive
+```
+
+```{python}
+abstract_text_object.similar('surface') #other words that appear in similar context like surface
+abstract_text_object.common_contexts(["surface","container"]) #examine context shared by two or more similar words
+```
+
+<br>
+
+###3.5 Lexical Dispersion
+
+<br>
+
+Lexical Dispersion shows the location of the word in the text and how many times the word appears.
+
+```{python}
+abstract_text_object.dispersion_plot(["surface","fuel","container"]) #plotting the dispersion plot for these words
+plt.close()
+```
+
+<br>
+
+###3.6 Lexical Diversity
+
+<br>
+
+Lexical Diversity is the range of words used in the text. The higher the range, the higher the diversity.
+
+Let $n_t$ be the number of unique tokens, $n_T$ be the total number of tokens and LD represents the Lexical Diversity. Then,
+
+$LD = \frac{n_t}{n_T}$.
+
+```{python}
+total_number_of_tokens = len(abstract_text_object) #length of the Abstract_from_Patent_Data_Text_Form
+number_of_unique_tokens = len(set(abstract_text_object)) #set is getting the unique words, then we count the number of those words
+
+lexical_diversity = number_of_unique_tokens/total_number_of_tokens #divide the number of unique words / the total number of tokens included in the Abstract to get the Lexical Diversity
+print(lexical_diversity)
+
+percentage_of_lexical_diversity = lexical_diversity * 100
+print(percentage_of_lexical_diversity) #This is the percentage of distinct words
+```
+
+<br>
+
+###3.7 Word Frequency, Frequency Distribution and WordClouds
+
+<br>
+
+Word Frequency is the number of times a word appears in a specific text. The text could be a sentence, a paragraph etc. 
+
+
+```{python}
+word_counts = Counter(abstract_text_object) #There are too many! Print to see!
+```
+
+Let us view the 10 most frequent words.
+
+```{python}
+frequent_words = word_counts.most_common(10) #getting the 10 most frequent words
+print(frequent_words)
+```
+
+Frequency Distribution provides an overview of the number of times each distinct word occurs. 
+
+```{python}
+frequency_distribution_for_words = FreqDist(abstract_text_object) #getting the Frequency Distribution for the Abstract
+
+print(frequency_distribution_for_words['surface']) #The Frequency of the word surface
+
+frequency_distribution_for_words.plot(5) #plotting the frequency distribution for the 5 most popular words
+```
+
+<div class = 'freqdist'> 
+
+![](FreqDist_Plot.png)
+
+</div>
+
+
+<br>
+
+**Exercise:** How useful is this? Are we interested in these words? What should we have done first? Do the appropriate text pre-processing and then find the 5 most popular words and plot a Frequency Distribution and a Lexical Dispersion Graph. Does the Lexical Diversity changes?
+
+<br>
+
+Wordcloud (or tag cloud) is a visual representation of text data. Words (usually single) are presented with the most important one having the larger font (size) and the size is reduced as we move to less important words. 
+
+```{python}
+#how to generate wordclouds
+abstract_wordcloud = WordCloud().generate(abstract_string)
+                      
+plt.imshow(abstract_wordcloud)
+plt.axis("off")
+plt.show()
+plt.close()
+```
+
+<br>
+
+**Exercise** 
+
+1. Remove the stopwords and re-do the wordcloud. Do you notice any changes? Hint: Use the clean data that you obtained from the previous Section.
+
+<br>
+
+**Intended Learning Outcomes:** Now, should 
+
+* be familiar with the exploratory analysis techniques, 
+
+* understand the rationale for using each technique, 
+
+* when it is used and 
+
+* how you can interpret the outcome from each technique to understand the dataset. 
+
+* You should know how to search and visualize specific words and their frequency in the dataset, 
+
+* calculate lexical diversity. 
+
+* You should also know how to find the most frequent words, plot a frequency distribution plot
+
+<br>
+
+##Chapter 4: Direct Features
+
+<br>
+
+**Intended Learning Outcomes:** By the end of Chapter 4, you should
+
+* be able to explain the reasons for performing feauture engineering techniques to transform text data into numeric data and 
+
+* apply different techniques to achieve that. 
+
+* You will know what Entity Recognition and N-grams are and how to apply these techniques. 
+
+* You will be able to understand how to transform text data into numeric using Bag-of-Words (Doc2bow) and One-Hot Encoding methods and be able to perform that. 
+
+* You should know how to visualize text data using wordclouds using two different frequency measures (simple and Term Frequency- Inverse Document Frequency) 
+
+<br>
+
+###4.1 What it is
+
+<br>
+
+Direct Features is about applying feature engineering techniques to convert the text data into numeric data. 
+
+<br>
+
+###4.2 Why do we Transform Data
+
+<br>
+
+Machine Learning Techniques require numeric data to be able to process it
+
+<br>
+
+###4.3 Name Entity Recognition (NER)
+
+<br>
+
+NER tools separate entities into different classes. The category labels are PERSON, ORGANIZATION, and GPE (geopolitical entity).
+
+```{python}
+example_document = 'I am flying to JFK in New York in December to visit the Statue of Liberty and Fifth Avenue'
+
+document_tokens = nltk.word_tokenize(example_document)
+document_tokens_with_part_of_speech_tag = nltk.pos_tag(document_tokens)
+print(document_tokens_with_part_of_speech_tag)
+
+entity_recognition = nltk.ne_chunk(document_tokens_with_part_of_speech_tag)
+print(entity_recognition)
+```
+
+<br>
+
+**Discussion:** What do you think of the outcome? 
+
+**Exercise:** Use the same sentence with lowercase letters then test if `nltk` can still recognise everything.
+
+<br>
+
+###4.4 N-grams
+
+<br>
+
+N-grams is a sequence of characters or words. Character unigram consists of 1 character, character N-gram consists of N characters. The same applies for words. Word N-grams consists of a sequence of N-words. In the example below we use wordgrams.
+
+```{python}
+number_of_ngrams = 2 #You can change n to get unigrams or more than two
+
+example_sentence = 'I am flying to JFK in New York in December to visit the Statue of Liberty and Fifth Avenue'
+n_grams_of_example_sentence = ngrams(nltk.word_tokenize(example_sentence), number_of_ngrams) #splitting the sentence in n-grams. Here n=2 ie bigrams.
+for grams in n_grams_of_example_sentence:
+  print(grams)
+```
+
+<br>
+
+###4.5 One-Hot Encoding
+
+<br>
+
+One-Hot Encoding is mapping the categorical values to integer values.
+
+```{python}
+how_I_feel = ['happy', 'unhappy', 'unhappy', 'neutral', 'happy', 'happy']
+encoded_feelings = pd.get_dummies(how_I_feel)
+print(encoded_feelings)
+```
+
+<br>
+
+**Exercise:** What if we had 2 different categories? Do One-Hot Encoding with two categories using the simple way. 
+
+<br>
+
+###4.6 Bag-of-Words (BOW)
+
+<br>
+
+BOW does not consider grammar or word order. Suppose we have a sentence, BOW it measures the frequency of each word.
+
+<br>
+
+####4.6.1 CountVectorizer
+
+<br>
+
+```{python}
+bag_of_word_example_sentence = ["I saw the ball. There is the ball."] 
+
+vectorizer = CountVectorizer()  #creating the transformer
+```
+
+```{python, results = 'hide'}
+vectorizer.fit(bag_of_word_example_sentence)  #tokenizing and building the vocaculary using the BOW_Example_Sentence
+```
+
+```{python}
+print(vectorizer.vocabulary_)
+```
+
+This displays the unique words within the sentence, assigned in alphabetical order an incrementing index. Words of a single character are removed, due to the default token pattern used. 
+
+```{python}
+encoded_sentence = vectorizer.transform(bag_of_word_example_sentence) #encode document
+print(encoded_sentence.toarray()) #the output is given in alphabetical order. First 'ball' which the frequency is 2.
+```
+
+<br>
+
+**Exercise:** Find the unigrams, bigrams and bag-of-words of 'My house is really big. My car is more expensive than yours.' What is their difference?
+
+<br>
+
+####4.6.2 Doc2bow
+
+<br>
+
+This is yet another way to transform words into numbers.
+
+```{python}
+bag_of_words_second_example = [['cat', 'horse', 'dog', 'horse', 'cat', 'cat']]
+
+dictionary_for_second_example = corpora.Dictionary(bag_of_words_second_example) #create a dictionary
+
+#you can add more documents using Dictionary_for_Second_Example.add_documents(["snake", "bear"])
+
+#frequency of words and their mapping to numbers
+frequencies_for_second_example = [dictionary_for_second_example.doc2bow(text) for text in bag_of_words_second_example]
+print(frequencies_for_second_example)
+```
+
+
+###4.7 Important Words with Term Frequency–Inverse Document Frequency (TF-IDF)
+
+<br>
+
+Recall that a Text Corpus or Corpora is a large set of text data in any language. The Text Corpus contains one or multiple documents. Suppose the text data is a set of abstracts, then each abstract is considered as a document within the Text Corpus (set of abstracts).
+
+TF-IDF assigns a weight to each word. It practically measures how important the word is to the document in the Corpus. The importance increases proportionally to the number of times a word appears in the document, however it is penalised by the frequency of the word in the corpus. The higher the value of TF-IDF, the rarer the words is. The smaller the TF-IDF, the more common the word is to the Corpus.  
+
+The TF (term frequency) of a word is the frequency of a word in a document. The IDF (inverse document frequency) of a word is the measure of how significant that term is in the whole corpus.
+
+The Term Frequency is calculated by: 
+$TF_{t} = \frac{N_{t}}{(TN)}$, where $N_{t} =$ No of times term t appears in a document and $(TN) =$ Total number of terms in the document.
+
+The Inverse Document Frequency is found using:
+
+$IDF_{t} = \log_{e}{\frac{(TN)_{doc}}{N_{tdoc}}}$, where $(TN)_{doc} =$ Total number of documents and $N_{tdoc} =$ Number of documents with the term t in it.
+
+Then, the Term Frequency- Inverse Document Frequency for the t term is:
+
+$(TFIDF)_{t} = TF_{t} \times IDF_{t}$.
+
+<br>
+
+**Steps - Plot a wordcloud with TF-IDF:**
+
+1. Build a dictionary `corpora.Dictionary()` : match words to numbers
+
+2. Apply bag of words methods to change the words into numbers `doc2bow()`
+
+3. Build a TF-IDF Model `TfidfModel()` and get the weights
+
+4. Flatten the weights from a list of list of pairs into a list of pairs and then change it into a dictionary
+
+5. Plot the wordcloud from the dictionary in step 4
+
+<br>
+
+We first have the dataset and we clean it.
+
+```{python}
+#Importing some Example Data
+example_data = []
+for fileid in brown.fileids():
+    document = ' '.join(brown.words(fileid))
+    example_data.append(document)
+print(example_data[0])
+```
+
+```{python}
+#Quick Text-Preprocessing (only lowercase and tokenizing)
+def fast_cleaning(text):
+  tokenized_text = text.lower().split() #lowering and tokenizing
+  return tokenized_text
+``` 
+
+```{python} 
+# tokenize the data and filter out stopwords
+clean_data = []
+for text in example_data:
+  clean_data.append(fast_cleaning(text))
+```
+
+<br>
+
+Now, let us follow the steps that we mentioned above to plot the TF-IDF wordcloud.
+
+<br> 
+
+**Step 1:** Build a dictionary `corpora.Dictionary()` : match words to numbers
+
+```{python}
+# Build a Dictionary - association word to numeric id
+example_dictionary = corpora.Dictionary(clean_data)
+# print(example_dictionary[0])
+```
+
+<br>
+
+**Step 2:** Apply bag of words methods to change the words into numbers `doc2bow()`
+
+```{python}
+# Apply doc2bow for the word frequencies
+example_corpus = [example_dictionary.doc2bow(text) for text in clean_data]
+# print(example_corpus[0])
+```
+
+<br>
+
+**Step 3:** Build a TF-IDF Model `TfidfModel()` and get the weights
+
+```{python}
+# Build TF-IDF model
+tfidf_model = TfidfModel(example_corpus)
+
+# Get TF-IDF weights
+tfidf_weights = [tfidf_model[each_element] for each_element in example_corpus]
+#print(tfidf_weights[0])
+```
+
+<br>
+
+**Step 4:** Flatten the weights from a list of list of pairs into a list of pairs and then change it into a dictionary
+
+```{python}
+#tfidf_weights are a list of list of pairs and we need to flatten it into list of pairs only. The code below means 
+#  for sublist in tfidf_weights:
+#    for item in sublist:
+#        flat_list.append(item)
+flattened_weights = [item for sublist in tfidf_weights for item in sublist]
+
+#print(flattened_weights)
+
+paired_tfidf_weights = [(example_dictionary[pair[0]], pair[1]) for pair in flattened_weights]
+#print(paired_tfidf_weights)
+
+#tfidf_weights_paired is a list, we need to change it into a dictionary
+paired_weights_dictionary = dict(paired_tfidf_weights)
+#print(paired_weights_dictionary)
+```
+
+<br>
+
+**Step 5:** Plot the wordcloud from the dictionary in step 4
+```{python}
+#Initialize wordcloud
+wordcloud = WordCloud(background_color="white", max_words=2000, width = 1024, height = 720)
+
+# Generate the cloud
+wordcloud.generate_from_frequencies(paired_weights_dictionary)
+
+plt.imshow(wordcloud)
+plt.axis("off")
+plt.show()
+```
+
+<br>
+
+**Intended Learning Outcomes:** Now, you should
+
+* be able to explain the reasons for performing feauture engineering techniques to transform text data into numeric data and 
+
+* apply different techniques to achieve that. 
+
+* You should know what Entity Recognition and N-grams are and how to apply these techniques. 
+
+* You should understand how to transform text data into numeric using Bag-of-Words (Doc2bow), One-Hot Encoding methods and be able to perform that. 
+
+* You should know how to visualize text data using wordclouds using two different frequency measures (simple and Term Frequency- Inverse Document Frequency) 
+
+\newline \newline \newline \newline
+
+<br>
+
+##Chapter 5: Case-Studies (Think-Discuss-Do)
+
+\newline \newline \newline \newline
+
+<br>
+
+**Intended Learning Outcomes:** By the end of Chapter 5, you would
+
+* feel confident to describe datasets, 
+
+* discuss what the appropriate steps are to do text-preprocessing and some exploratory analysis (wordclouds)
+
+* You should be able to perform these steps in the appropriate order and communicate the results.
+
+
+1. Import the Patent Dataset to Python
+
+    a. Understand/Describe the dataset
+    
+    c. Think what we could do with this dataset
+    
+    d. Perform the appropriate steps to extract meaningful outcomes from the dataset (do pre-processing using the `clean_up_text()`). 
+    
+    e. Plot a wordcloud with TF-IDF
+    
+    f. What did we find
+    
+    g. What it means/Communicate your results
+    
+    Hint: To be able to plot the TF-IDF wordlcoud you will need to have a list of list of strings.
+    
+```{python}
+patent_data_abstract = patent_data["abstract"] #taking the abstract only
+```
+
+`Patent_Data_Abstract` is a pandas Series. To plot TF-IDF wordcloud we need to have a list of list of strings where each list of strings is considered as a separate document. 
+Also, for the `clean_up_text()` we need to loop over and clean each tweet separately and join them while the end results is a list of list of strings. See the code below.
+
+
+```{python}
+#changing from pandas Series to a list of lists of strings
+#range(0,100) because this is how many abstracts we have
+list_of_abstracts = []
+for i in range(0,100):
+    list_of_abstracts.append(patent_data_abstract.iloc[[i]].tolist())
+```
+
+
+```{python}
+clean_patent_data=[]
+#list_of_abstracts is a list of list of strings. I loop over each list, I join all words within that list into one string, I apply the clean_up_text function and then I put everything into a list. Note: the output of clean_up_text is a list 
+for each_list in list_of_abstracts:
+  patent_data_string = " ".join(each_list)
+  temporary_variable = clean_up_text(patent_data_string)
+  clean_patent_data.append(temporary_variable.split())
+```
+    
+<br>
+
+2. Import the Hep Dataset (High Energy Physics) to Python
+
+    a. Understand/Describe the dataset
+    
+    c. Think what we could do with this dataset
+    
+    d. Perform the appropriate steps to extract meaningful outcomes from the dataset (pre-processing). Hint: Use the function `clean_up_text()`.
+    
+    e. Use wordcloud with simple frequency
+    
+    g. What did we find
+    
+    f. What it means/Communicate your results
+    
+<br>
+
+\newline \newline \newline \newline
+
+<br>
+
+**Intended Learning Outcomes:** Now, you should
+
+* feel confident to describe datasets, 
+
+* discuss what the appropriate steps are to do text-preprocessing and exploratory analysis (wordclouds)
+
+* You should also be able to perform these steps in the appropriate order and communicate the results.
+
+\newline \newline \newline \newline
+
+<br>
+
+##Further Reading
+
+<br>
+
+1. Natural Language Processing with Python, Analyzing Text with the Natural Language Toolkit, Steven Bird, Ewan Klein and Edward Loper, O'Reilly
+
+2. Introduction to Natural Language Processing, Concepts and Fundamentals for Beginners, Michael Walker, AI Sciences
+
+3. Hands-On Natural Language Processing with Python, A practical guide to applying deep learning architectures to your NLP applications, Rajesh Arumugan and Rajalingappaa Shanmugamani, Packt
+
+4. Python Natural Language Processing, Advance Machine learning and deep learning techniques for natural language processing, Jalaj Thanaki, Packt
+
+<br>
+
+##What to learn next
+
+<br>
+
+1. Clustering and Dimensionality Reduction Algorithms
+
+2. Topic Modelling
+
+3. Text Classification
+
+4. Sentiment Analysis
+
+<br>
+
+##Appendix 1: Regex Package (Python)
+
+<br>
+
+A regular expression is a special sequence of characters that helps you match or find other strings or sets of strings, using a specialized syntax held in a pattern. The module `re` provides full support for regular expressions in Python. 
+
+`re.match(pattern, string, flag = 0)`: checks for a match and only returns the first occurrence of the search pattern from the string
+
+`re.search(pattern, string, flag = 0)`: similarly, `re.search` searches the entire string but gives you back all of the matches rather than just the first one which you get from `re.match`
+
+`re.sub(pattern, replacement, string, max=0)`: substitute matched regular expressions eg. remove excess white space in a text string
+
+There are a number of regular expression patterns to help match specific parts of text. For example:
+
+`.` --> Matches any single character except newline
+
+`*` --> Matches 0 or more occurrences of preceding expression
+
+`?` --> Matches 0 or 1 occurrence of preceeding expression
+
+`+` --> matches 1 or more occurences of preceeding expression
+
+`^` --> matched beginning of a line
+
+`$` --> matches end of line
+
+`\d` or `[0-9]` --> matches digits
+
+`\D` --> matches non digits
+
+`[a-z]` --> matches any lower case ASCII
+
+A python style comment `#.*$` will match 0 or more occurances of '#' followed by any character until the end of the line. Regex can be quite powerful - but also a bit tricky and difficult to read at times!
+
+**Example**
+
+```{python}
+import re
+
+example_string = 'Regex   is the best!!!'
+print(example_string)
+
+# substitute the extra white space with the normal white space
+new_string = re.sub('   ',' ',example_string)
+print(new_string)
+```
+
+If you are interested more in regular expressions you can experiment yourself using: https://regexr.com
+
+<br>
+
+##Appendix 2: nltk Package- POS List
+
+CC	coordinating conjunction
+
+CD	cardinal digit
+
+DT	determiner
+
+EX	existential there (like: "there is" ... think of it like "there exists")
+
+FW	foreign word
+
+IN	preposition/subordinating conjunction
+
+JJ	adjective	'big'
+
+JJR	adjective, comparative	'bigger'
+
+JJS	adjective, superlative	'biggest'
+
+LS	list marker	1)
+
+MD	modal	could, will
+
+NN	noun, singular 'desk'
+
+NNS	noun plural	'desks'
+
+NNP	proper noun, singular	'Harrison'
+
+NNPS	proper noun, plural	'Americans'
+
+PDT	predeterminer	'all the kids'
+
+POS	possessive ending	parent's
+
+PRP	personal pronoun	I, he, she
+
+PRP$	possessive pronoun	my, his, hers
+
+RB	adverb	very, silently,
+
+RBR	adverb, comparative	better
+
+RBS	adverb, superlative	best
+
+RP	particle	give up
+
+TO	to	go 'to' the store.
+
+UH	interjection	errrrrrrrm
+
+VB	verb, base form	take
+
+VBD	verb, past tense	took
+
+VBG	verb, gerund/present participle	taking
+
+VBN	verb, past participle	taken
+
+VBP	verb, sing. present, non-3d	take
+
+VBZ	verb, 3rd person sing. present	takes
+
+WDT	wh-determiner	which
+
+WP	wh-pronoun	who, what
+
+WP$	possessive wh-pronoun	whose
+
+WRB	wh-abverb	where, when
+
+<br>
+
